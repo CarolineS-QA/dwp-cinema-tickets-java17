@@ -2,6 +2,8 @@
 
 Using Java 17
 
+[Starting template repo](https://github.com/dwp/cinema-tickets)
+
 ## Business Rules
 
 - There are 3 types of tickets i.e. Infant, Child, and Adult.
