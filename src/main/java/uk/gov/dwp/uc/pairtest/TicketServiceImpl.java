@@ -9,18 +9,24 @@ public class TicketServiceImpl implements TicketService {
     // would use dependency injection
     private SeatReservationService seatReservationService;
     private TicketPaymentService ticketPaymentService;
+    // could pull from config
+    private int adultTicketCost = 20;
+    private int childTicketCost = 10;
+    private int infantTicketCost = 0;
 
     @Override
     public void purchaseTickets(Long accountId, TicketTypeRequest... ticketTypeRequests) throws InvalidPurchaseException {
         if(accountId > 0L) {
             if(validTicketRequests(ticketTypeRequests)) {
+                // I feel it is a bad assumption to assume external services never fail, but t'is the task
                 seatReservationService.reserveSeat(accountId, calculateNumberOfSeats(ticketTypeRequests));
                 ticketPaymentService.makePayment(accountId, calculatePayment(ticketTypeRequests));
             } else {
+                // I would validate the request before reaching this method rather than throw this exception here
                 throw new InvalidPurchaseException();
             }
         } else {
-            throw new InvalidPurchaseException();//invalid accountId, TODO consider custom auth exception - ideally handle separately
+            throw new InvalidPurchaseException();//invalid accountId, consider custom auth exception - but ideally handle separately
         }
     }
 
@@ -56,16 +62,16 @@ public class TicketServiceImpl implements TicketService {
             int tickets = ticketTypeRequest.getNoOfTickets();
             switch (ticketType) {
                 case ADULT:
-                    totalCost += tickets * 20;
+                    totalCost += tickets * adultTicketCost;
                 case CHILD:
-                    totalCost += tickets * 10;
-                case INFANT: // no cost
+                    totalCost += tickets * childTicketCost;
+                case INFANT:
+                    totalCost += tickets * infantTicketCost;
             }
         }
         return totalCost;
     }
 
-    // Expects validated request, seats should always be greater than 0
     private int calculateNumberOfSeats(TicketTypeRequest... ticketTypeRequests) {
         int totalSeats = 0;
         for(TicketTypeRequest ticketTypeRequest: ticketTypeRequests) {
